@@ -1,23 +1,23 @@
 function randomString_(len) {
   var ret = '';
-  
+
   for (var i = 0; i < len; i++) {
     var idx = Math.floor(Math.random() * CHARS.length);
     ret = ret + CHARS[idx];
   }
-  
+
   return ret;
 }
 
 function authenticate_(username, password) {
   var table = fetchSheetRange_('stations', 'A', 'D');
-  
+
   var conditions = {
     'username': {
       'value': username
     }
   }
-  
+
   if (!fetchCell_(table, conditions, 'username')) {
     throw 'Invalid username.';
   } else if (fetchCell_(table, conditions, 'password') !== password) {
@@ -40,7 +40,7 @@ function grant_(token, func) {
   }
 }
 
-function updateSecret_(parent, assignTo) {
+function updateSecret_(parent, payloads) {
   var app = SpreadsheetApp.openById(DB_ID);
   var sheet = app.getSheetByName('tokens');
   var n = sheet.getLastRow() + 1; // the row number after append
@@ -50,13 +50,13 @@ function updateSecret_(parent, assignTo) {
     'COUNTIFS(B'+ n +':B'+ n +',"LOGIN",C'+ n +':C'+ n +',C'+ n +')<=' + ALLOW_LOGIN_NUMBER +
     ')'
   );
-  
+
   var token = randomString_(TOKEN_LENGTH);
   
-  sheet.appendRow([token, parent, assignTo.id, new Date(), validator]);
+  sheet.appendRow([token, parent, payloads.station.id, new Date(), validator]);
   CacheService.getUserCache().remove(parent);
-  CacheService.getUserCache().put(token, JSON.stringify({'station': assignTo}));
-  
+  CacheService.getUserCache().put(token, JSON.stringify(payloads));
+
   return token;
 };
 

@@ -13,8 +13,14 @@ function authorize(token) {
   var auth = CacheService.getUserCache().get(token);
   if (auth) {
     var parsed = JSON.parse(auth);
+    var payloads = {
+      'student': parsed.student,
+      'station': parsed.station,
+    }
+    var newToken = updateSecret_(token, payloads);
     return {
-      'token': token,
+      'content': auth,
+      'token': newToken,
       'displayName': parsed.station.displayName,
       'student': parsed.student,
     };
@@ -32,7 +38,11 @@ function login(f) {
   }
 
   var station = authenticate_(username, password);
-  var token = updateSecret_('LOGIN', station);
+
+  var payloads = {
+    'station': station,
+  }
+  var token = updateSecret_('LOGIN', payloads);
 
   log_('INFO', '[LOGIN] <' + station.displayName + '> successfully login');
 
@@ -124,7 +134,10 @@ function assign(f) {
     }
 
     /* Update token */
-    var newToken = updateSecret_(token, station);
+    var payloads = {
+      'station': station,
+    }
+    var newToken = updateSecret_(token, payloads);
 
     return {
       'token': newToken,
