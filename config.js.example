@@ -1,0 +1,15 @@
+/* Generation settings */
+DB_ID = '__SPREADSHEET_ID__';
+ELECTION_TITLE = '';
+
+CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+TOKEN_LENGTH = 128;
+AUTHORIZATION_VALID_TIME = 1800; // seconds; should be an integer less than 21600 seconds = 6 hours
+
+// The number of available slot sessions
+ALLOW_LOGIN_NUMBER = 1; // WIP
+
+/* ACA API settings */
+ACA_API_URL = '__URL_OF_ACA_API__';
+ACA_API_USER = '__API_USERNAME__';
+ACA_API_PASSWORD = '__API_PASSWORD__';
