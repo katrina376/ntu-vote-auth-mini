@@ -55,7 +55,11 @@ function updateSecret_(parent, payloads) {
   
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator]);
   CacheService.getUserCache().remove(parent);
-  CacheService.getUserCache().put(token, JSON.stringify(payloads));
+  CacheService.getUserCache().put(
+    token,
+    JSON.stringify(payloads),
+    AUTHORIZATION_VALID_TIME
+  );
 
   return token;
 };
