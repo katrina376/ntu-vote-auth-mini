@@ -204,12 +204,26 @@
     }
 
     /* Pending animation */
-    const startPending = () => { $('div#loading').setAttribute('data-state', 'active') };
-    const stopPending = () => { $('div#loading').removeAttribute('data-state') };
+    const startPending = panel => {
+      $$(panel + ' button').forEach(el => el.setAttribute('disabled', ''));
+      $$(panel + ' input').forEach(el => el.setAttribute('readonly', ''));
+      $('div#loading').setAttribute('data-state', 'active');
+    }
+    const stopPending = panel => {
+      $$(panel + ' button').forEach(el => el.removeAttribute('disabled'));
+      $$(panel + ' input').forEach(el => el.removeAttribute('readonly'));
+      $('div#loading').removeAttribute('data-state');
+    }
+    const resetPanel = panel => {$$(panel + ' input').forEach(el => el.value = '')};
 
     /* Function to alert */
-    const yell = (s, c) => { $('#announce').innerText = s; $('#announce').className = c || 'alert'; };
+    const yell = (s, type) => {
+      $('#announce').innerText = s;
+      $('#announce').className = type || 'alert';
+    }
     const yellConfirm = s => confirm(s);
+
+    const currentPanel = () => $$('section.panel[data-state=active] form')[0];
 
     /* Update authorization token */
     function updateSecret(token) {
@@ -224,13 +238,13 @@
 
     /* Handler of authorization */
     function onAuthFailure(err) {
-      stopPending();
+      stopPending('form#login');
       updateSecret();
       yell('登入已失效，請重新登入！', 'warning');
     }
 
     function onAuthSuccess(ret) {
-      stopPending();
+      stopPending('form#login');
       onLoginSuccess(ret);
       if (ret.student) {
         onLookupSuccess(ret.student);
@@ -239,16 +253,15 @@
 
     /* Handler of login */
     function onLoginFailure(err) {
-      stopPending();
-      $('input#station-pass').value = '';
-      $$('form#login button').forEach(el => el.removeAttribute('disabled'));
+      stopPending('form#login');
+      resetPanel('form#login');
       yell('登入失敗，原因：' + err.message);
     }
 
     function onLoginSuccess(ret) {
       /* Activate */
-      stopPending();
-      $$('form#login input').forEach(el => {el.value = ''});
+      stopPending('form#login');
+      resetPanel('form#login');
 
       /* Renew */
       updateSecret(ret.token);
@@ -256,12 +269,16 @@
 
       /* Event listener for logout */
       $('#logout').addEventListener('click', ev => {
-        startPending();
         ev.preventDefault();
+
+        var current = currentPanel();
+        startPending(current.id);
+
         var token = localStorage.getItem('authorization');
         google.script.run
           .withFailureHandler(onLogoutFailure)
           .withSuccessHandler(onLogoutSuccess)
+          .withUserObject(current)
           .logout(token);
       });
 
@@ -270,14 +287,15 @@
     }
 
     /* Handler of logout */
-    function onLogoutFailure(err) {
-      stopPending();
+    function onLogoutFailure(err, obj) {
+      stopPending(obj.id);
       yell('登出失敗，原因：' + err.message);
     }
 
-    function onLogoutSuccess(ret) {
+    function onLogoutSuccess(ret, obj) {
       /* Activate */
-      stopPending();
+      stopPending(obj.id);
+      resetPanel(obj.id);
 
       /* Renew */
       updateSecret();
@@ -285,13 +303,13 @@
       /* Show */
       $('#station').innerHTML = '';
       show('section#login-panel');
+      yell('登出成功！', 'info');
     }
 
     /* Handler of lookup */
     function onLookupFailure(err) {
       /* Activate */
-      stopPending();
-      $$('form#lookup button').forEach(el => el.removeAttribute('disabled'));
+      stopPending('form#lookup');
 
       /* Clear */
       var studentId = $('input#student-id').value;
@@ -302,8 +320,8 @@
 
     function onLookupSuccess(ret) {
       /* Activate */
-      stopPending();
-      $$('form#lookup input').forEach(el => {el.value = ''});
+      stopPending('form#lookup');
+      $('input#student-id').value = '';
 
       /* Render */
       var result = ret.result;
@@ -312,7 +330,7 @@
         display = (
           display +
           '<ol>' +
-          result.map(el => '<li>' + el + '</li>').reduce((p, el) => p + el) +
+          result.map(el => '<li>' + el + '</li>').join('') +
           '</ol>'
         );
       } else {
@@ -326,17 +344,13 @@
 
     /* Handler of assignment */
     function onAssignFailure(err) {
-      /* Activate */
-      stopPending();
-      $$('form#assign button').forEach(el => el.removeAttribute('disabled'));
-
+      stopPending('form#assign');
       yell('操作失敗，原因：' + err.message);
     }
 
     function onAssignSuccess(ret) {
       /* Activate */
-      stopPending();
-      $$('form#assign button').forEach(el => el.removeAttribute('disabled'));
+      stopPending('form#assign');
 
       /* Renew */
       updateSecret(ret.token);
@@ -347,8 +361,8 @@
       if (ret.ok) {
         yell('【' + ret.studentId + '】操作成功！', 'info');
       } else {
-        alert('【' + ret.studentId + '】操作失敗！原因：已於其他投票所完成驗證。');
-        yell('【' + ret.studentId + '】操作失敗！原因：已於其他投票所完成驗證。', 'alert');
+        alert('【' + ret.studentId + '】操作失敗，原因：已於其他投票所完成驗證。');
+        yell('【' + ret.studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
       }
     }
 
@@ -386,8 +400,7 @@
 
     /* Event listener for login */
     $('form#login').addEventListener('submit', ev => {
-      startPending();
-      $$('form#login button').forEach(el => el.setAttribute('disabled', ''));
+      startPending('form#login');
 
       google.script.run
         .withFailureHandler(onLoginFailure)
@@ -401,8 +414,7 @@
       var syntaxValid = new RegExp('^[A-Z]\\d{2}[A-Z0-9]\\d{5}$').test(studentId);
 
       if (syntaxValid) {
-        startPending();
-        $$('form#lookup button').forEach(el => el.setAttribute('disabled', ''));
+        startPending('form#lookup');
         google.script.run
           .withFailureHandler(onLookupFailure)
           .withSuccessHandler(onLookupSuccess)
@@ -415,8 +427,7 @@
     /* Event listener for assignment */
     $$('button.summit-assign').forEach(el => {
       el.addEventListener('click', ev => {
-        startPending();
-        $$('form#assign button').forEach(el => el.setAttribute('disabled', ''));
+        startPending('form#assign');
         $('input#operation').value = ev.target.value;
 
         var display = ev.target.innerHTML;
@@ -433,8 +444,7 @@
           .withSuccessHandler(onAssignSuccess)
           .assign($('form#assign'));
       } else {
-        stopPending();
-        $$('form#assign button').forEach(el => el.removeAttribute('disabled'));
+        stopPending('form#assign');
       }
     }
     </script>
