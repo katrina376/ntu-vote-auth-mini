@@ -36,7 +36,10 @@ function grant_(token, func) {
     var parsed = JSON.parse(auth);
     return func(parsed);
   } else {
-    throw 'Unauthorized. Please refresh the page and login again.';
+    return {
+      'status': 403,
+      'error': 'Unauthorized. Please refresh the page and login again.',
+    };
   }
 }
 

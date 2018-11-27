@@ -173,7 +173,6 @@
     </section>
     <section id="lookup-panel" class="panel">
       <form id="lookup">
-        <input type="hidden" name="token" class="token" value=""/>
         <label for="student-id">查詢學號：
           <input type="text" name="studentId" id="student-id" pattern="[A-Za-z][0-9]{2}\w[0-9]{5}" required/>
         </label>
@@ -183,8 +182,6 @@
     <section id="assign-panel" class="panel">
       <section id="lookup-result"></section>
       <form id="assign">
-        <input type="hidden" name="token" class="token" value=""/>
-        <input type="hidden" name="operation" id="operation" value=""/>
         <button type="button" class="summit-assign" id="send-accept" value="ACCEPT">確認領票</button>
         <button type="button" class="summit-assign" id="send-reject" value="REJECT">終止驗證</button>
       </form>
@@ -244,10 +241,14 @@
     }
 
     function onAuthSuccess(ret) {
+      if (ret.status !== 200) {
+        return onAuthFailure(Error(ret.error));
+      }
+      
       stopPending('form#login');
       onLoginSuccess(ret);
-      if (ret.student) {
-        onLookupSuccess(ret.student);
+      if (ret.body.student) {
+        onLookupSuccess(ret);
       }
     }
 
@@ -259,13 +260,17 @@
     }
 
     function onLoginSuccess(ret) {
+      if (ret.status !== 200) {
+        return onLoginFailure(Error(ret.error));
+      }
+      
       /* Activate */
       stopPending('form#login');
       resetPanel('form#login');
 
       /* Renew */
       updateSecret(ret.token);
-      $('div#station').innerHTML = '【' + ret.displayName + '投票所】<a href="#" id="logout">登出</a>';
+      $('div#station').innerHTML = '【' + ret.body.displayName + '投票所】<a href="#" id="logout">登出</a>';
 
       /* Event listener for logout */
       $('#logout').addEventListener('click', ev => {
@@ -279,7 +284,7 @@
           .withFailureHandler(onLogoutFailure)
           .withSuccessHandler(onLogoutSuccess)
           .withUserObject(current)
-          .logout(token);
+          .logout({'token': token, 'body': {}});
       });
 
       /* Show */
@@ -293,6 +298,10 @@
     }
 
     function onLogoutSuccess(ret, obj) {
+      if (ret.status !== 200) {
+        return onLogoutFailure(Error(ret.error), obj);
+      }
+      
       /* Activate */
       stopPending(obj.id);
       resetPanel(obj.id);
@@ -319,18 +328,23 @@
     }
 
     function onLookupSuccess(ret) {
+      if (ret.status !== 200) {
+        return onLookupFailure(Error(Error(ret.error)));
+      }
+      
       /* Activate */
       stopPending('form#lookup');
       $('input#student-id').value = '';
 
       /* Render */
-      var result = ret.result;
-      var display = '<p>【<span id="show-student-id">' + ret.studentId + '</span>】可以投的票種有：</p>';
-      if (result.length > 0) {
+      var ballots = ret.body.student.ballots;
+      var studentId = ret.body.student.id;
+      var display = '<p>【<span id="show-student-id">' + studentId + '</span>】可以投的票種有：</p>';
+      if (ballots.length > 0) {
         display = (
           display +
           '<ol>' +
-          result.map(el => '<li>' + el + '</li>').join('') +
+          ballots.map(el => '<li>' + el + '</li>').join('') +
           '</ol>'
         );
       } else {
@@ -349,6 +363,10 @@
     }
 
     function onAssignSuccess(ret) {
+      if (ret.status !== 201) {
+        return onAssignFailure(Error(ret.error));
+      }
+      
       /* Activate */
       stopPending('form#assign');
 
@@ -357,12 +375,13 @@
 
       /* Show */
       show('section#lookup-panel');
-
-      if (ret.ok) {
-        yell('【' + ret.studentId + '】操作成功！', 'info');
+      
+      studentId = ret.body.student.id;
+      if (ret.status === 201) {
+        yell('【' + studentId + '】操作成功！', 'info');
       } else {
-        alert('【' + ret.studentId + '】操作失敗，原因：已於其他投票所完成驗證。');
-        yell('【' + ret.studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
+        alert('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。');
+        yell('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
       }
     }
 
@@ -387,7 +406,7 @@
         google.script.run
           .withFailureHandler(onAuthFailure)
           .withSuccessHandler(onAuthSuccess)
-          .authorize(lsToken);
+          .authorize({'token': lsToken, 'body': {}});
       }
       // stopPending();
     });
@@ -405,7 +424,13 @@
       google.script.run
         .withFailureHandler(onLoginFailure)
         .withSuccessHandler(onLoginSuccess)
-        .login(ev.target);
+        .login({
+          'token': null,
+          'body': {
+            'username': ev.target.elements['stationUser'].value,
+            'password': ev.target.elements['stationPass'].value,
+          },
+        });
     });
 
     /* Event listener for lookup */
@@ -418,7 +443,10 @@
         google.script.run
           .withFailureHandler(onLookupFailure)
           .withSuccessHandler(onLookupSuccess)
-          .lookup(ev.target);
+          .lookup({
+            'token': localStorage.getItem('authorization'),
+            'body': {'studentId': studentId},
+          });
       } else {
         yell('學號不符合格式。', 'warning');
       }
@@ -428,21 +456,24 @@
     $$('button.summit-assign').forEach(el => {
       el.addEventListener('click', ev => {
         startPending('form#assign');
-        $('input#operation').value = ev.target.value;
-
+        
         var display = ev.target.innerHTML;
-        submitAssign(display);
+        var operation = ev.target.value;
+        submitAssign(display, operation);
       });
     });
 
-    function submitAssign(display) {
+    function submitAssign(display, operation) {
       var studentId = $('#show-student-id').innerHTML;
 
       if (yellConfirm('確定【' + studentId + '】要「' + display + '」嗎？')) {
         google.script.run
           .withFailureHandler(onAssignFailure)
           .withSuccessHandler(onAssignSuccess)
-          .assign($('form#assign'));
+          .assign({
+            'token': localStorage.getItem('authorization'),
+            'body': {'operation': operation},
+          });
       } else {
         stopPending('form#assign');
       }
