@@ -73,3 +73,17 @@ function addVoteRecord_(studentId, station, option) {
   sheet.appendRow([studentId, station, option, new Date()]);
   return;
 }
+
+function getVoteRecordCount_(station) {
+  var table = fetchSheetRange_('voted', 'A', 'D');
+  var conditions = {
+    'station_id': {
+      'value': station,
+    },
+    'operation': {
+      'value': 'ACCEPT',
+    }
+  }
+  
+  return fetchCells_(table, conditions, 'student_id').length;
+}
