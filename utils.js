@@ -22,7 +22,7 @@ function fetchColumn_(table, columnName, type) {
   return table.body.map(function(row){return type(row[idx])});
 }
 
-function fetchCell_(table, conditions, targetField, type) {
+function fetchCells_(table, conditions, targetField, type) {
   var base = fetchColumn_(table, targetField, type);
   
   for (var key in conditions) {
@@ -32,7 +32,11 @@ function fetchCell_(table, conditions, targetField, type) {
   }
   
   var ret = base.filter(function(el){return typeof el !== 'null'});
-  return ret[0];
+  return ret;
+}
+
+function fetchCell_(table, conditions, targetField, type) {
+  return fetchCells_(table, conditions, targetField, type)[0];
 }
 
 function readSheet2Arr_(name, transform) {
