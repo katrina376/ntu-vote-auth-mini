@@ -9,7 +9,7 @@ function fetchSheetRange_(name, fromColumn, toColumn) {
   var sheet = app.getSheetByName(name);
   var rowNum = sheet.getLastRow();
   var columns = sheet.getRange(fromColumn + '1:' + toColumn + '1').getValues()[0];
-  var values = sheet.getRange(fromColumn + '2:'+ toColumn + rowNum).getValues(); 
+  var values = sheet.getRange(fromColumn + '2:'+ toColumn + rowNum).getValues();
   return {
     header: columns,
     body: values
