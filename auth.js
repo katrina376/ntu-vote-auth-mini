@@ -33,10 +33,37 @@ function authenticate_(username, password) {
 function grant_(token, func) {
   var auth = CacheService.getUserCache().get(token);
   if (auth) {
+    /* Cache remains valid */
     var parsed = JSON.parse(auth);
     return func(parsed);
   } else {
-    throw 'Unauthorized. Please refresh the page and login again.';
+    /* Cache is cleared for some reason; check out spreadsheet */
+    var table = fetchSheetRange_('tokens', 'A', 'F');
+    var conditions = {
+      'token': {
+        'value': token,
+      },
+      'is_valid': {
+        'value': true,
+        'type': Boolean,
+      },
+      'time': {
+        'value': Date.now() - AUTHORIZATION_VALID_TIME * 1000,
+        'type': function(s) {return new Date(s)},
+        'operator': function(a, b) {return a.getTime() > b},
+      }
+    }
+    
+    var content = fetchCell_(table, conditions, 'content');
+    if (content) {
+      var parsed = JSON.parse(content);
+      return func(parsed);
+    } else {
+      return {
+        'status': 403,
+        'error': 'Unauthorized. Please refresh the page and login again.',
+      };
+    }
   }
 }
 
@@ -46,18 +73,20 @@ function updateSecret_(parent, payloads) {
   var n = sheet.getLastRow() + 1; // the row number after append
   var validator = (
     '=AND(' +
-    'COUNTIF(B$2:B'+ n +',A'+ n +')=0,'+
-    'COUNTIFS(B'+ n +':B'+ n +',"LOGIN",C'+ n +':C'+ n +',C'+ n +')<=' + ALLOW_LOGIN_NUMBER +
+    'COUNTIF(B$2:B,A'+ n +')=0,'+
+    'COUNTIFS(B'+ n +':B,"LOGIN",C' + n + ':C,C'+ n +')<=' + ALLOW_LOGIN_NUMBER + ',' +
+    'D' + n + '+TIME(0,' + AUTHORIZATION_VALID_TIME + ',0)>NOW()'+
     ')'
   );
 
   var token = randomString_(TOKEN_LENGTH);
+  var content = JSON.stringify(payloads);
   
-  sheet.appendRow([token, parent, payloads.station.id, new Date(), validator]);
+  sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
   CacheService.getUserCache().remove(parent);
   CacheService.getUserCache().put(
     token,
-    JSON.stringify(payloads),
+    content,
     AUTHORIZATION_VALID_TIME
   );
 
@@ -69,4 +98,18 @@ function addVoteRecord_(studentId, station, option) {
   var sheet = app.getSheetByName('voted');
   sheet.appendRow([studentId, station, option, new Date()]);
   return;
+}
+
+function getVoteRecordCount_(station) {
+  var table = fetchSheetRange_('voted', 'A', 'D');
+  var conditions = {
+    'station_id': {
+      'value': station,
+    },
+    'operation': {
+      'value': 'ACCEPT',
+    }
+  }
+  
+  return fetchCells_(table, conditions, 'student_id').length;
 }

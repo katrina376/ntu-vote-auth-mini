@@ -9,32 +9,37 @@ function showTitle() {
   return ELECTION_TITLE;
 }
 
-function authorize(token) {
-  var auth = CacheService.getUserCache().get(token);
-  if (auth) {
-    var parsed = JSON.parse(auth);
+function authorize(req) {
+  var token = req.token;
+  var ret = grant_(token, function(auth) {
     var payloads = {
-      'student': parsed.student,
-      'station': parsed.station,
+      'student': auth.student,
+      'station': auth.station,
     }
     var newToken = updateSecret_(token, payloads);
     return {
-      'content': auth,
+      'status': 200,
       'token': newToken,
-      'displayName': parsed.station.displayName,
-      'student': parsed.student,
+      'body': {
+        'displayName': auth.station.displayName,
+        'acceptedCount': getVoteRecordCount_(auth.station.id),
+        'student': auth.student,
+      },
     };
-  } else {
-    throw 'Invalid token. Please refresh the page and login again.';
-  }
+  });
+  
+  return ret;
 }
 
-function login(f) {
-  var username = f.stationUser.trim();
-  var password = f.stationPass.trim();
+function login(req) {
+  var username = req.body.username.trim();
+  var password = req.body.password.trim();
 
   if ((username.length === 0) || (password.length === 0)) {
-     throw 'The username and password should not be empty.';
+     return {
+       'status': 403,
+       'error': 'The username and password should not be empty.',
+     };
   }
 
   var station = authenticate_(username, password);
@@ -47,23 +52,35 @@ function login(f) {
   log_('INFO', '[LOGIN] <' + station.displayName + '> successfully login');
 
   return {
+    'status': 200,
     'token': token,
-    'displayName': station.displayName,
+    'body': {
+      'displayName': station.displayName,
+      'acceptedCount': getVoteRecordCount_(station.id),
+    },
   };
 }
 
-function logout(token) {
+function logout(req) {
+  var token = req.token;
   CacheService.getUserCache().remove(token);
+  return {
+    'status': 200,
+    'body': {},
+  }
 }
 
-function lookup(f) {
-  var token = f.token;
-  var studentId = f.studentId.trim().toUpperCase(); // normalize
+function lookup(req) {
+  var token = req.token;
+  var studentId = req.body.studentId.trim().toUpperCase(); // normalize
 
   /* Input data (student ID) validation */
   var syntaxValid = new RegExp('^[A-Z]\\d{2}[A-Z0-9]\\d{5}$').test(studentId);
   if (!syntaxValid) {
-    throw 'The student ID is not compliant.';
+    return {
+      'status': 400,
+      'error': 'The student ID is not compliant.',
+    };
   }
 
   var ret = grant_(token, function(auth) {
@@ -72,7 +89,10 @@ function lookup(f) {
     /* Check if the student has already voted */
     if (isStudentVote_(studentId)) { // voted or rejected
       log_('WARNING', '[LOOKUP] <' + studentId + '> duplicated lookup');
-      throw 'Voted or rejected at another station.';
+      return {
+        'status': 400,
+        'error': 'Voted or rejected at another station.',
+      };
     }
 
     try {
@@ -80,57 +100,71 @@ function lookup(f) {
 
       if (!student.valid) {
         log_('WARNING', '[LOOKUP] <' + studentId + '> is invalid');
-        throw 'Student ID is invalid. The student may have graduated or taken a leave of absence.';
+        return {
+          'status': 400,
+          'error': 'Student ID is invalid. The student may have graduated or taken a leave of absence.'
+        };
       } else {
         var ballots = fetchBallots_(student);
-        var ret = {
-          'studentId': studentId,
-          'result': ballots,
+        var payloads = {
+          'station': auth.station,
+          'student': {
+            'id': studentId,
+            'ballots': ballots,
+          },
         };
 
         log_('INFO', '[LOOKUP] <' + studentId + '> assign <' + ballots.join(',') + '>');
 
-        CacheService.getUserCache().put(
-          token,
-          JSON.stringify({'station': auth.station, 'student': ret}),
-          AUTHORIZATION_VALID_TIME
-        )
+        var newToken = updateSecret_(token, payloads);
 
-        return ret;
+        return {
+          'status': 200,
+          'token': newToken,
+          'body': {
+            'studentId': studentId,
+            'ballots': ballots,
+          },
+        };
       }
     } catch (err) {
       log_('WARNING', 'Student <' + studentId + '> is unavailable');
-      throw 'Student ID is unavailable. (ACA: ' + err + ')';
+      return {
+        'status': 400,
+        'error': 'Student ID is unavailable. (ACA: ' + err + ')',
+      };
     }
   });
 
   return ret;
 }
 
-function assign(f) {
-  var token = f.token;
-  var operation = f.operation;
+function assign(req) {
+  var token = req.token;
+  var operation = req.body.operation;
 
   /* Input data (operation) validation */
   if (['ACCEPT', 'REJECT'].indexOf(operation) < 0) {
-    throw 'Invalid operation.';
+    return {
+      'status': 400,
+      'error': 'Invalid operation.',
+    };
   }
 
   var ret = grant_(token, function(auth) {
     var student = auth.student;
     var station = auth.station;
-
-    var studentId = student.studentId;
-    var ok = false;
+    
+    var status = 400;
 
     /* Check if the student has already voted */
-    if (isStudentVote_(studentId)) { // voted or rejected
-      log_('WARNING', '[ASSIGN] <' + studentId + '> duplicated assign');
+    if (isStudentVote_(student.id)) { // voted or rejected
+      log_('WARNING', '[ASSIGN] <' + student.id + '> duplicated assign');
     } else {
       /* Append record */
-      addVoteRecord_(studentId, station.id, operation);
-      log_('INFO', '[ASSIGN] <' + studentId + '> assign with <' + operation + '>');
-      ok = true;
+      addVoteRecord_(student.id, station.id, operation);
+      log_('INFO', '[ASSIGN] <' + student.id + '> assign with <' + operation + '>');
+      status = 201;
     }
 
     /* Update token */
@@ -140,9 +174,12 @@ function assign(f) {
     var newToken = updateSecret_(token, payloads);
 
     return {
+      'status': status,
       'token': newToken,
-      'studentId': studentId,
-      'ok': ok,
+      'body': {
+        'acceptedCount': getVoteRecordCount_(station.id),
+        'studentId': student.id,
+      },
     };
   });
 

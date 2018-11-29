@@ -17,7 +17,7 @@ function fetchStudent_(studentId) {
 
   var uid = XmlService.createElement('UID').setText(ACA_API_USER);
   var password = XmlService.createElement('PASSWORD').setText(ACA_API_PASSWORD);
-  var stuid = XmlService.createElement('STUID').setText(studentId);
+  var stuid = XmlService.createElement('STUID').setText(studentId + '0');
   var ver = XmlService.createElement('Vers').setText('1.00');
 
   root.addContent(ver).addContent(uid).addContent(password).addContent(stuid);
@@ -42,7 +42,7 @@ function fetchStudent_(studentId) {
     if (String(code) !== '200') {
       throw 'Service respond code ' + code;
     } else {
-      var content = resp.getContentText();
+      var content = resp.getContentText('Big5');
       var info = XmlService.parse(content).getRootElement();
       var ok = info.getChildText('WEBOK') === 'OK';
   

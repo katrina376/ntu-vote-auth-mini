@@ -59,7 +59,7 @@ function fetchBallots_(student) {
         ret.splice(remove, 1);
       }
     }
-    row = studentIds.indexOf(student.id, row+1) 
+    row = studentIds.indexOf(student.id, row+1);
   }
   
   /* Remove dulpicate results */
@@ -70,4 +70,3 @@ function fetchBallots_(student) {
   
   return ret;
 }
-
