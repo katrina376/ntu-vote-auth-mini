@@ -67,6 +67,10 @@ function login(req) {
 function logout(req) {
   var token = req.token;
   CacheService.getUserCache().remove(token);
+  return {
+    'status': 200,
+    'body': {},
+  }
 }
 
 function lookup(req) {
