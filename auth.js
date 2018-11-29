@@ -49,18 +49,20 @@ function updateSecret_(parent, payloads) {
   var n = sheet.getLastRow() + 1; // the row number after append
   var validator = (
     '=AND(' +
-    'COUNTIF(B$2:B'+ n +',A'+ n +')=0,'+
-    'COUNTIFS(B'+ n +':B,"LOGIN",C' + n + ':C,C'+ n +')<=' + ALLOW_LOGIN_NUMBER +
+    'COUNTIF(B$2:B,A'+ n +')=0,'+
+    'COUNTIFS(B'+ n +':B,"LOGIN",C' + n + ':C,C'+ n +')<=' + ALLOW_LOGIN_NUMBER + ',' +
+    'D' + n + '+TIME(0,' + AUTHORIZATION_VALID_TIME + ',0)>NOW()'+
     ')'
   );
 
   var token = randomString_(TOKEN_LENGTH);
+  var content = JSON.stringify(payloads);
   
-  sheet.appendRow([token, parent, payloads.station.id, new Date(), validator]);
+  sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
   CacheService.getUserCache().remove(parent);
   CacheService.getUserCache().put(
     token,
-    JSON.stringify(payloads),
+    content,
     AUTHORIZATION_VALID_TIME
   );
 
