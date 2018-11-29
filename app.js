@@ -10,29 +10,25 @@ function showTitle() {
 }
 
 function authorize(req) {
-  var auth = CacheService.getUserCache().get(req.token);
-  
-  if (auth) {
-    var parsed = JSON.parse(auth);
+  var token = req.token;
+  var ret = grant_(token, function(auth) {
     var payloads = {
-      'student': parsed.student,
-      'station': parsed.station,
+      'student': auth.student,
+      'station': auth.station,
     }
-    var newToken = updateSecret_(req.token, payloads);
+    var newToken = updateSecret_(token, payloads);
     return {
       'status': 200,
       'token': newToken,
       'body': {
-        'displayName': parsed.station.displayName,
-        'student': parsed.student,
+        'displayName': auth.station.displayName,
+        'acceptedCount': getVoteRecordCount_(auth.station.id),
+        'student': auth.student,
       },
     };
-  } else {
-    return {
-      'status': 403,
-      'error': 'Invalid token. Please refresh the page and login again.',
-    };
-  }
+  });
+  
+  return ret;
 }
 
 function login(req) {
