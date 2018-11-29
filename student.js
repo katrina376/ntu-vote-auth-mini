@@ -42,7 +42,7 @@ function fetchStudent_(studentId) {
     if (String(code) !== '200') {
       throw 'Service respond code ' + code;
     } else {
-      var content = resp.getContentText();
+      var content = resp.getContentText('Big5');
       var info = XmlService.parse(content).getRootElement();
       var ok = info.getChildText('WEBOK') === 'OK';
   
