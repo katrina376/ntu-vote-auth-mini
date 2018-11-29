@@ -25,10 +25,26 @@ function fetchColumn_(table, columnName, type) {
 function fetchCells_(table, conditions, targetField, type) {
   var base = fetchColumn_(table, targetField, type);
   
+  var idxMap = [];
+  for (var i = 0; i < base.length; ++i) {
+    idxMap.push(i);
+  }
+  
   for (var key in conditions) {
+    var idxFilter = [];
     var cond = conditions[key];
     var ref = fetchColumn_(table, key, cond.type);
-    base = base.filter(function(el, i) {return ref[i] === cond.value});
+    var opr = cond.operator || function(a, b) {return a === b};
+    
+    base = base.filter(function(el, i) {
+      var idx = idxMap[i];
+      if (opr(ref[idx], cond.value)) {
+          idxFilter.push(idx);
+      }
+      return opr(ref[idx], cond.value)
+    });
+    
+    idxMap = new Array(idxFilter);
   }
   
   var ret = base.filter(function(el){return typeof el !== 'null'});
