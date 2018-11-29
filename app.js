@@ -116,15 +116,11 @@ function lookup(req) {
 
         log_('INFO', '[LOOKUP] <' + studentId + '> assign <' + ballots.join(',') + '>');
 
-        CacheService.getUserCache().put(
-          token,
-          JSON.stringify(payloads),
-          AUTHORIZATION_VALID_TIME
-        )
+        var newToken = updateSecret_(token, payloads);
 
         return {
           'status': 200,
-          'token': token,
+          'token': newToken,
           'body': {
             'studentId': studentId,
             'ballots': ballots,

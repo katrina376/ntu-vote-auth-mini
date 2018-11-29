@@ -255,7 +255,7 @@
       stopPending('form#login');
       prepareLookup(ret.token, ret.body.displayName, ret.body.acceptedCount);
       if (ret.body.student) {
-        prepareAssign(ret.body.student.id, ret.body.student.ballots);
+        prepareAssign(ret.token, ret.body.student.id, ret.body.student.ballots);
       }
     }
 
@@ -342,14 +342,17 @@
       if (ret.status !== 200) {
         return onLookupFailure(Error(Error(ret.error)));
       } else {
-        prepareAssign(ret.body.studentId, ret.body.ballots)
+        prepareAssign(ret.token, ret.body.studentId, ret.body.ballots);
       }
     }
     
-    function prepareAssign(studentId, ballots) {
+    function prepareAssign(token, studentId, ballots) {
       /* Activate */
       stopPending('form#lookup');
       $('input#student-id').value = '';
+      
+      /* Renew */
+      updateSecret(token);
 
       /* Render */
       var display = '<p>【<span id="show-student-id">' + studentId + '</span>】可以投的票種有：</p>';
