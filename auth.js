@@ -50,7 +50,7 @@ function updateSecret_(parent, payloads) {
   var validator = (
     '=AND(' +
     'COUNTIF(B$2:B'+ n +',A'+ n +')=0,'+
-    'COUNTIFS(B'+ n +':B'+ n +',"LOGIN",C'+ n +':C'+ n +',C'+ n +')<=' + ALLOW_LOGIN_NUMBER +
+    'COUNTIFS(B'+ n +':B,"LOGIN",C' + n + ':C,C'+ n +')<=' + ALLOW_LOGIN_NUMBER +
     ')'
   );
 
