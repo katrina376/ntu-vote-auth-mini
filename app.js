@@ -56,6 +56,7 @@ function login(req) {
     'token': token,
     'body': {
       'displayName': station.displayName,
+      'acceptedCount': getVoteRecordCount_(station.id),
     },
   };
 }
@@ -124,7 +125,10 @@ function lookup(req) {
         return {
           'status': 200,
           'token': token,
-          'body': payloads,
+          'body': {
+            'studentId': studentId,
+            'ballots': ballots,
+          },
         };
       }
     } catch (err) {
@@ -154,17 +158,16 @@ function assign(req) {
   var ret = grant_(token, function(auth) {
     var student = auth.student;
     var station = auth.station;
-
-    var studentId = student.id;
+    
     var status = 400;
 
     /* Check if the student has already voted */
-    if (isStudentVote_(studentId)) { // voted or rejected
-      log_('WARNING', '[ASSIGN] <' + studentId + '> duplicated assign');
+    if (isStudentVote_(student.id)) { // voted or rejected
+      log_('WARNING', '[ASSIGN] <' + student.id + '> duplicated assign');
     } else {
       /* Append record */
-      addVoteRecord_(studentId, station.id, operation);
-      log_('INFO', '[ASSIGN] <' + studentId + '> assign with <' + operation + '>');
+      addVoteRecord_(student.id, station.id, operation);
+      log_('INFO', '[ASSIGN] <' + student.id + '> assign with <' + operation + '>');
       status = 201;
     }
 
@@ -178,8 +181,8 @@ function assign(req) {
       'status': status,
       'token': newToken,
       'body': {
-        'station': station,
-        'student': student,
+        'acceptedCount': getVoteRecordCount_(station.id),
+        'studentId': student.id,
       },
     };
   });
