@@ -33,13 +33,37 @@ function authenticate_(username, password) {
 function grant_(token, func) {
   var auth = CacheService.getUserCache().get(token);
   if (auth) {
+    /* Cache remains valid */
     var parsed = JSON.parse(auth);
     return func(parsed);
   } else {
-    return {
-      'status': 403,
-      'error': 'Unauthorized. Please refresh the page and login again.',
-    };
+    /* Cache is cleared for some reason; check out spreadsheet */
+    var table = fetchSheetRange_('tokens', 'A', 'F');
+    var conditions = {
+      'token': {
+        'value': token,
+      },
+      'is_valid': {
+        'value': true,
+        'type': Boolean,
+      },
+      'time': {
+        'value': Date.now() - AUTHORIZATION_VALID_TIME * 1000,
+        'type': function(s) {return new Date(s)},
+        'operator': function(a, b) {return a.getTime() > b},
+      }
+    }
+    
+    var content = fetchCell_(table, conditions, 'content');
+    if (content) {
+      var parsed = JSON.parse(content);
+      return func(parsed);
+    } else {
+      return {
+        'status': 403,
+        'error': 'Unauthorized. Please refresh the page and login again.',
+      };
+    }
   }
 }
 
