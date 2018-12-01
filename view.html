@@ -83,6 +83,16 @@
       background: #CCC !important;
       color: #888;
     }
+    
+    footer {
+      bottom: 0;
+      font-size: 0.8em;
+      left: 0;
+      padding: 1em 2em;
+      position: fixed;
+      text-align: center;
+      width: 100%;
+    }
 
     a, a:visited {
       color: #3366CC;
@@ -416,6 +426,11 @@
       google.script.run
         .withSuccessHandler(title => {$('#election-title').innerText = title})
         .showTitle();
+      
+      /* Show information at footer */
+      google.script.run
+        .withSuccessHandler(content => {$('footer').innerHTML = content})
+        .showFooter();
 
       /* Disable autocomplete and the default event of form submission */
       $$('form').forEach(el => {
