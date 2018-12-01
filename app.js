@@ -9,6 +9,10 @@ function showTitle() {
   return ELECTION_TITLE;
 }
 
+function showFooter() {
+  return FOOTER_CONTENT.join('<br />');
+}
+
 function authorize(req) {
   var token = req.token;
   var ret = grant_(token, function(auth) {
