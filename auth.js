@@ -83,6 +83,8 @@ function updateSecret_(parent, payloads) {
   var content = JSON.stringify(payloads);
   
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
+  SpreadsheetApp.flush();
+  
   CacheService.getUserCache().remove(parent);
   CacheService.getUserCache().put(
     token,
@@ -97,6 +99,7 @@ function addVoteRecord_(studentId, station, option) {
   var app = SpreadsheetApp.openById(DB_ID);
   var sheet = app.getSheetByName('voted');
   sheet.appendRow([studentId, station, option, new Date()]);
+  SpreadsheetApp.flush();
   return;
 }
 
