@@ -44,7 +44,7 @@ function fetchCells_(table, conditions, targetField, type) {
       return opr(ref[idx], cond.value)
     });
     
-    idxMap = new Array(idxFilter);
+    idxMap = idxFilter.slice();
   }
   
   var ret = base.filter(function(el){return typeof el !== 'null'});
