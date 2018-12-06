@@ -31,7 +31,7 @@ function authenticate_(username, password) {
 }
 
 function grant_(token, func) {
-  var auth = CacheService.getUserCache().get(token);
+  var auth = CacheService.getScriptCache().get(token);
   if (auth) {
     /* Cache remains valid */
     var parsed = JSON.parse(auth);
@@ -85,8 +85,8 @@ function updateSecret_(parent, payloads) {
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
   SpreadsheetApp.flush();
   
-  CacheService.getUserCache().remove(parent);
-  CacheService.getUserCache().put(
+  CacheService.getScriptCache().remove(parent);
+  CacheService.getScriptCache().put(
     token,
     content,
     AUTHORIZATION_VALID_TIME
