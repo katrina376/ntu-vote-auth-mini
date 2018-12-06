@@ -31,7 +31,7 @@ function authenticate_(username, password) {
 }
 
 function grant_(token, func) {
-  var auth = CacheService.getUserCache().get(token);
+  var auth = CacheService.getScriptCache().get(token);
   if (auth) {
     /* Cache remains valid */
     var parsed = JSON.parse(auth);
@@ -83,8 +83,10 @@ function updateSecret_(parent, payloads) {
   var content = JSON.stringify(payloads);
   
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
-  CacheService.getUserCache().remove(parent);
-  CacheService.getUserCache().put(
+  SpreadsheetApp.flush();
+  
+  CacheService.getScriptCache().remove(parent);
+  CacheService.getScriptCache().put(
     token,
     content,
     AUTHORIZATION_VALID_TIME
@@ -97,6 +99,7 @@ function addVoteRecord_(studentId, station, option) {
   var app = SpreadsheetApp.openById(DB_ID);
   var sheet = app.getSheetByName('voted');
   sheet.appendRow([studentId, station, option, new Date()]);
+  SpreadsheetApp.flush();
   return;
 }
 
