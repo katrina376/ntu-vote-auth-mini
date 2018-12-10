@@ -112,3 +112,15 @@ function secure_(content, key) {
   // TODO: encrypt with the key
   return secureContent;
 }
+
+function displayError_(code) {
+  if (ERROR_DISPLAY[code]) {
+    if (LANGUAGE === 'zh') {
+      return ERROR_DISPLAY[code]['zh'];
+    } else {
+      return ERROR_DISPLAY[code]['en'];
+    }
+  } else {
+    return 'Unrecognized error: ' + code;
+  }
+}

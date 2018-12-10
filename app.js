@@ -42,7 +42,7 @@ function login(req) {
   if ((username.length === 0) || (password.length === 0)) {
      return {
        'status': 403,
-       'error': 'The username and password should not be empty.',
+       'error': displayError_('INPUT_EMPTY'),
      };
   }
 
@@ -83,7 +83,7 @@ function lookup(req) {
   if (!syntaxValid) {
     return {
       'status': 400,
-      'error': 'The student ID is not compliant.',
+      'error': displayError_('STUDENT_ID_NOT_COMPLIANT'),
     };
   }
 
@@ -95,7 +95,7 @@ function lookup(req) {
       log_('WARNING', '[LOOKUP] <' + studentId + '> duplicated lookup');
       return {
         'status': 400,
-        'error': 'Voted or rejected at another station.',
+        'error': displayError_('AUTHENTICATED'),
       };
     }
 
@@ -106,7 +106,7 @@ function lookup(req) {
         log_('WARNING', '[LOOKUP] <' + studentId + '> is invalid');
         return {
           'status': 400,
-          'error': 'Student ID is invalid. The student may have graduated or taken a leave of absence.'
+          'error': displayError_('STUDENT_ID_INVALID'),
         };
       } else {
         var ballots = fetchBallots_(student);
@@ -135,7 +135,7 @@ function lookup(req) {
       log_('WARNING', 'Student <' + studentId + '> is unavailable');
       return {
         'status': 400,
-        'error': 'Student ID is unavailable. (ACA: ' + err + ')',
+        'error': displayError_('ACA_EXCEPTION_FUNC')(err),
       };
     }
   });
@@ -151,7 +151,7 @@ function assign(req) {
   if (['ACCEPT', 'REJECT'].indexOf(operation) < 0) {
     return {
       'status': 400,
-      'error': 'Invalid operation.',
+      'error': displayError_('OPERATION_INVALID'),
     };
   }
 
