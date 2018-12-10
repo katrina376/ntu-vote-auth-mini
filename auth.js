@@ -61,7 +61,7 @@ function grant_(token, func) {
     } else {
       return {
         'status': 403,
-        'error': 'Unauthorized. Please refresh the page and login again.',
+        'error': displayError_('UNAUTHORIZED'),
       };
     }
   }
