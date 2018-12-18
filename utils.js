@@ -1,11 +1,11 @@
 function log_(level, content) {
-  var app = SpreadsheetApp.openById(DB_ID);
+  var app = SpreadsheetApp.openById(SYS_DB_ID);
   var sheet = app.getSheetByName('log');
   sheet.appendRow([level, new Date(), content]);
 }
 
-function fetchSheetRange_(name, fromColumn, toColumn) {
-  var app = SpreadsheetApp.openById(DB_ID);
+function fetchSheetRange_(dbid, name, fromColumn, toColumn) {
+  var app = SpreadsheetApp.openById(dbid);
   var sheet = app.getSheetByName(name);
   var rowNum = sheet.getLastRow();
   var columns = sheet.getRange(fromColumn + '1:' + toColumn + '1').getValues()[0];

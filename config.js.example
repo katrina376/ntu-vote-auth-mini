@@ -1,5 +1,6 @@
 /* Generation settings */
 DB_ID = '__SPREADSHEET_ID__';
+SYS_DB_ID = '__SPREADSHEET_ID__';
 ELECTION_TITLE = '';
 
 CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
@@ -8,6 +9,8 @@ AUTHORIZATION_VALID_TIME = 1800; // seconds; should be an integer less than 2160
 
 // The number of available slot sessions
 ALLOW_LOGIN_NUMBER = 1; // WIP
+
+LANGUAGE = '__ISO_639-1__';
 
 /* ACA API settings */
 ACA_API_URL = '__URL_OF_ACA_API__';
