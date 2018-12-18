@@ -1,5 +1,5 @@
 function isStudentVote_(studentId) {
-  var studentIds = fetchColumn_(fetchSheetRange_('voted', 'A', 'A'), 'student_id');
+  var studentIds = fetchColumn_(fetchSheetRange_(DB_ID, 'voted', 'A', 'A'), 'student_id');
   return studentIds.indexOf(studentId) > -1;
 }
 
@@ -11,7 +11,7 @@ function fetchBallots_(student) {
   var ret = [];
   
   /* Lookup general setting */
-  var ballots = fetchSheetRange_('ballots', 'A', 'E')
+  var ballots = fetchSheetRange_(DB_ID, 'ballots', 'A', 'E')
   
   var ids = fetchColumn_(ballots, 'id');
   var displayNames = fetchColumn_(ballots, 'display_name');
@@ -43,7 +43,7 @@ function fetchBallots_(student) {
   }
   
   /* Lookup overwrites */
-  var overwrites = fetchSheetRange_('overwrites', 'A', 'C')
+  var overwrites = fetchSheetRange_(DB_ID, 'overwrites', 'A', 'C')
   
   var studentIds = fetchColumn_(overwrites, 'student_id');
   var ballotIds = fetchColumn_(overwrites, 'ballot_id');

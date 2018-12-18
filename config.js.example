@@ -1,5 +1,6 @@
 /* Generation settings */
 DB_ID = '__SPREADSHEET_ID__';
+SYS_DB_ID = '__SPREADSHEET_ID__';
 ELECTION_TITLE = '';
 
 CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';

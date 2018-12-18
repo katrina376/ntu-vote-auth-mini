@@ -10,7 +10,7 @@ function randomString_(len) {
 }
 
 function authenticate_(username, password) {
-  var table = fetchSheetRange_('stations', 'A', 'D');
+  var table = fetchSheetRange_(DB_ID, 'stations', 'A', 'D');
 
   var conditions = {
     'username': {
@@ -38,7 +38,7 @@ function grant_(token, func) {
     return func(parsed);
   } else {
     /* Cache is cleared for some reason; check out spreadsheet */
-    var table = fetchSheetRange_('tokens', 'A', 'F');
+    var table = fetchSheetRange_(SYS_DB_ID, 'tokens', 'A', 'F');
     var conditions = {
       'token': {
         'value': token,
@@ -68,7 +68,7 @@ function grant_(token, func) {
 }
 
 function updateSecret_(parent, payloads) {
-  var app = SpreadsheetApp.openById(DB_ID);
+  var app = SpreadsheetApp.openById(SYS_DB_ID);
   var sheet = app.getSheetByName('tokens');
   var n = sheet.getLastRow() + 1; // the row number after append
   var validator = (
@@ -104,7 +104,7 @@ function addVoteRecord_(studentId, station, option) {
 }
 
 function getVoteRecordCount_(station) {
-  var table = fetchSheetRange_('voted', 'A', 'D');
+  var table = fetchSheetRange_(DB_ID, 'voted', 'A', 'D');
   var conditions = {
     'station_id': {
       'value': station,
