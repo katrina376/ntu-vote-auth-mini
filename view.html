@@ -396,10 +396,6 @@
     }
 
     function onAssignSuccess(ret) {
-      if (ret.status !== 201) {
-        return onAssignFailure(Error(ret.error));
-      }
-      
       /* Activate */
       stopPending('form#assign');
 
