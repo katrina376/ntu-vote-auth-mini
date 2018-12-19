@@ -114,6 +114,7 @@ function lookup(req) {
           'station': auth.station,
           'student': {
             'id': studentId,
+            'cardNum': student.cardNum,
             'ballots': ballots,
           },
         };
@@ -127,6 +128,7 @@ function lookup(req) {
           'token': newToken,
           'body': {
             'studentId': studentId,
+            'cardNum': student.cardNum,
             'ballots': ballots,
           },
         };

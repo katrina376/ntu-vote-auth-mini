@@ -272,7 +272,7 @@
       stopPending('form#login');
       prepareLookup(ret.token, ret.body.displayName, ret.body.acceptedCount);
       if (ret.body.student) {
-        prepareAssign(ret.token, ret.body.student.id, ret.body.student.ballots);
+        prepareAssign(ret.token, ret.body.student.id, ret.body.student.cardNum, ret.body.student.ballots);
       }
     }
 
@@ -359,20 +359,25 @@
       if (ret.status !== 200) {
         return onLookupFailure(Error(ret.error));
       } else {
-        prepareAssign(ret.token, ret.body.studentId, ret.body.ballots);
+        prepareAssign(ret.token, ret.body.studentId, ret.body.cardNum, ret.body.ballots);
       }
     }
     
-    function prepareAssign(token, studentId, ballots) {
+    function prepareAssign(token, studentId, cardNum, ballots) {
       /* Activate */
       stopPending('form#lookup');
       $('input#student-id').value = '';
       
       /* Renew */
       updateSecret(token);
+      
+      var cardNumText = (cardNum === '0') ? cardNum + ' 次（初發）' : cardNum + ' 次'
 
       /* Render */
-      var display = '<p>【<span id="show-student-id">' + studentId + '</span>】可以投的票種有：</p>';
+      var display = (
+        '<p>【<span id="show-student-id">' + studentId + '</span>】之學生證補發次數為 <span id="show-card-num"> ' + cardNumText + '</span>，請確認。</p>' +
+        '<p>可以投的票種有：</p>'
+      );
       if (ballots.length > 0) {
         display = (
           display +
@@ -498,9 +503,10 @@
     });
 
     function submitAssign(display, operation) {
-      var studentId = $('#show-student-id').innerHTML;
+      var studentId = $('#show-student-id').innerText;
+      var cardNumText = $('#show-card-num').innerText;
 
-      if (yellConfirm('確定【' + studentId + '】要「' + display + '」嗎？')) {
+      if (yellConfirm('確定【' + studentId + '】補發次數為 ' + cardNumText + '，要「' + display + '」嗎？')) {
         google.script.run
           .withFailureHandler(onAssignFailure)
           .withSuccessHandler(onAssignSuccess)
