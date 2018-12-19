@@ -42,25 +42,8 @@ function fetchBallots_(student) {
     }
   }
   
-  /* Lookup overwrites */
-  var overwrites = fetchSheetRange_(DB_ID, 'overwrites', 'A', 'C')
-  
-  var studentIds = fetchColumn_(overwrites, 'student_id');
-  var ballotIds = fetchColumn_(overwrites, 'ballot_id');
-  var modes = fetchColumn_(overwrites, 'mode');
-  
-  var row = studentIds.indexOf(student.id)
-  while (row > -1) {
-    if (modes[row] === 'ADD') {
-      ret.push(ballotIds[row])
-    } else if (modes[row] === 'BAN') {
-      var remove = ret.indexOf(ballotIds[row]);
-      if (remove > -1) {
-        ret.splice(remove, 1);
-      }
-    }
-    row = studentIds.indexOf(student.id, row+1);
-  }
+  /* Lookup overwrites of general cases */
+  ret = checkOverwrites_(student.id, 'overwrites', ret);
   
   /* Remove dulpicate results */
   ret = ret.filter(function(el, i, self) {return self.indexOf(el) === i});
@@ -69,4 +52,28 @@ function fetchBallots_(student) {
   ret = ret.map(function(el) {return displayNames[ids.indexOf(el)]});
   
   return ret;
+}
+
+function checkOverwrites_(studentId, tableName, chaining) {
+  /* Lookup overwrites */
+  var overwrites = fetchSheetRange_(DB_ID, tableName, 'A', 'C')
+  
+  var studentIds = fetchColumn_(overwrites, 'student_id');
+  var ballotIds = fetchColumn_(overwrites, 'ballot_id');
+  var modes = fetchColumn_(overwrites, 'mode');
+  
+  var row = studentIds.indexOf(studentId);
+  while (row > -1) {
+    if (modes[row] === 'ADD') {
+      chaining.push(ballotIds[row])
+    } else if (modes[row] === 'BAN') {
+      var remove = chaining.indexOf(ballotIds[row]);
+      if (remove > -1) {
+        chaining.splice(remove, 1);
+      }
+    }
+    row = studentIds.indexOf(studentId, row+1);
+  }
+  
+  return chaining;
 }
