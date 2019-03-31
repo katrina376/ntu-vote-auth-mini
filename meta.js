@@ -37,21 +37,13 @@ ERROR_DISPLAY = {
     'en': 'The username and password should not be empty.',
     'zh': '帳號或密碼應非空白。',
   },
-  'USERNAME_INVALID': {
-    'en': 'Invalid username.',
-    'zh': '投票所帳號無效。',
-  },
-  'PASSWORD_WRONG': {
-    'en': 'Invalid username.',
-    'zh': '投票所密碼錯誤。',
-  },
   'STUDENT_ID_NOT_COMPLIANT': {
     'en': 'The student ID is not compliant.',
     'zh': '學號格式不符合規範。',
   },
   'AUTHENTICATED': {
     'en': 'Voted or rejected at another station.',
-    'zh': '已於其他投票所確認領票或終止驗證。',
+    'zh': '已於其他投票所確認領票、終止驗證，或申請遠距投票。',
   },
   'ACA_EXCEPTION_FUNC': {
     'en': function(err) {return 'Student ID is unavailable. (ACA: ' + err + ')'},

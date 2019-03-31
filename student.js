@@ -10,6 +10,16 @@ var Student_ = function(info) {
     'name': info.getChildText('COLLEGE'),
     'code': this.dptCode[0],
   }
+  
+  this.cardNum = '0'
+  if (info.getChildText('ERROR').length > 0) {
+    // Extract card number
+    var rx = new RegExp('發卡次數:(\\d+)');
+    var m = rx.exec(info.getChildText('ERROR'));
+    if (m) {
+      this.cardNum = m[1] || 'INVALID';
+    }
+  }
 }
 
 function fetchStudent_(studentId) {
@@ -45,9 +55,14 @@ function fetchStudent_(studentId) {
       var content = resp.getContentText('Big5');
       var info = XmlService.parse(content).getRootElement();
       var ok = info.getChildText('WEBOK') === 'OK';
+      var incampus = info.getChildText('INCAMPUS');
   
       if (ok) {
+        log_('INFO', '[ACA] <' + studentId + '> successfully look up');
         return new Student_(info);
+      } else if (incampus.length > 0) {
+        log_('WARNING', '[ACA] Allowable exception when look up <' + studentId + '> with <' + info.getChildText('ERROR') + '>');
+        return new Student_(info); // deal with unexpected ACA API reaction
       } else {
         throw info.getChildText('ERROR');
       }
