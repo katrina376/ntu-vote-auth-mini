@@ -15,6 +15,8 @@ function fetchBallots_(student) {
   
   var ids = fetchColumn_(ballots, 'id');
   var displayNames = fetchColumn_(ballots, 'display_name');
+  
+  var cond_ids = fetchColumn_(ballots, 'cond_id');
   var fields = fetchColumn_(ballots, 'field');
   var values = fetchColumn_(ballots, 'value');
   
@@ -23,22 +25,32 @@ function fetchBallots_(student) {
     if (!conds[el]) {
       conds[el] = {}
     }
-    conds[el][fields[i]] = values[i];
-  })
-  
-  for (var i in conds) {
-    var all = true;
-    for (var field in conds[i]) {
-      var value = conds[i][field];
-      // TODO: workaround for avoiding eval
-      if (!isMatch_(eval('student.' + field), value)) {
-        all = false;
-        break;
-      }
+    
+    var cid = cond_ids[i];
+    if (!conds[el][cid]) {
+      conds[el][cid] = {}
     }
     
-    if (all) {
-      ret.push(i);
+    conds[el][cid][fields[i]] = values[i];
+  })
+  
+  for (var bid in conds) {
+    /* For each ballot */
+    for (var cid in conds[bid]) {
+      /* For each condition set of a specific ballot */
+      var all = true;
+      for (var field in conds[bid][cid]) {
+        /* For each condition of a condition set */
+        var value = conds[bid][cid][field];
+        if (!isMatch_(eval('student.' + field), value)) {
+          all = false;
+          break;
+        }
+      }
+      
+      if (all) {
+        ret.push(bid);
+      }
     }
   }
   
@@ -48,8 +60,8 @@ function fetchBallots_(student) {
   /* Remove dulpicate results */
   ret = ret.filter(function(el, i, self) {return self.indexOf(el) === i});
   
-  /* Translate to display names */
-  ret = ret.map(function(el) {return displayNames[ids.indexOf(el)]});
+  /* Translate to indice and display names */
+  ret = ret.map(function(el) {return {'id': el, 'displayName': displayNames[ids.indexOf(el)]}});
   
   return ret;
 }
