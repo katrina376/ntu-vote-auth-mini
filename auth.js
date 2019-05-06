@@ -95,10 +95,16 @@ function updateSecret_(parent, payloads) {
   return token;
 };
 
-function addVoteRecord_(studentId, station, option) {
+function addVoteRecord_(studentId, station, option, ballots) {
   var app = SpreadsheetApp.openById(DB_ID);
   var sheet = app.getSheetByName('voted');
-  sheet.appendRow([studentId, station, option, new Date()]);
+  
+  var record = '__NONE__'
+  if (ballots.length > 0) {
+    record = ballots.join(',');
+  }
+  
+  sheet.appendRow([studentId, station, option, record, new Date()]);
   SpreadsheetApp.flush();
   return;
 }

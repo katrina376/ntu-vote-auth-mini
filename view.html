@@ -3,7 +3,7 @@
   <head>
     <base target="_top">
     <style>
-    div, section, header, footer {
+    body, div, section, header, footer {
       -webkit-box-sizing: border-box;
          -moz-box-sizing: border-box;
               box-sizing: border-box;
@@ -15,7 +15,7 @@
 
     body {
       font-size: 20px;
-      max-width: 40em;
+      max-width: 48em;
       min-width: 20em;
       width: 100%;
       margin: 0 auto;
@@ -78,7 +78,45 @@
       display: inline-block;
       margin: 0.5em 0;
     }
-
+    
+    ol > li {
+      text-align: left;
+    }
+    
+    label.ballot-checkbox>input[type=checkbox] {
+      display: none;
+    }
+    
+    label.ballot-checkbox>span.checkmark {
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+      width: 1.1em;
+      height: 1.1em;
+      margin: 0 0.4em 0 0;
+      border: #AAA 0.1em solid;
+    }
+    
+    input[type=checkbox]:checked ~ span.checkmark {
+      background: #3366CC;
+      border: #3366CC 0.1em solid;
+    }
+    
+    input[type=checkbox]:checked ~ span.checkmark::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0.3em;
+      top: 0.1em;
+      width: 0.3em;
+      height: 0.6em;
+      border: solid #FFF;
+      border-width: 0 0.2em 0.2em 0;
+      -webkit-transform: rotate(45deg);
+          -ms-transform: rotate(45deg);
+              transform: rotate(45deg);
+    }
+    
     button[disabled] {
       background: #CCC !important;
       color: #888;
@@ -89,7 +127,7 @@
       font-size: 0.8em;
       left: 0;
       padding: 1em 2em;
-      position: fixed;
+      /*position: fixed;*/
       text-align: center;
       width: 100%;
     }
@@ -163,7 +201,7 @@
          -moz-animation: spin 1s infinite;
               animation: spin 1s infinite;
     }
-
+    
     @-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
        @-moz-keyframes spin { 100% {    -moz-transform: rotate(-360deg); } }
             @keyframes spin { 100% {         transform: rotate(-360deg); } }
@@ -250,7 +288,6 @@
     function updateSecret(token) {
       if (token) {
         localStorage.setItem('authorization', token);
-        $$('input.token').forEach(el => {el.value = token});
       } else {
         localStorage.removeItem('authorization');
         $$('input').forEach(el => {el.value = ''});
@@ -382,7 +419,7 @@
         display = (
           display +
           '<ol>' +
-          ballots.map(el => '<li>' + el + '</li>').join('') +
+          ballots.map(el => '<li>' + createBallotCheckbox(el.id, el.displayName) + '</li>').join('') +
           '</ol>'
         );
       } else {
@@ -505,18 +542,42 @@
     function submitAssign(display, operation) {
       var studentId = $('#show-student-id').innerText;
       var cardNumText = $('#show-card-num').innerText;
-
+      
+      var checkboxes = $$('.ballot-checkbox>input');
+      var chosenBallots = [];
+      
+      checkboxes.forEach(el => {
+        if (el.checked) {
+          chosenBallots.push(el.value);
+        }
+      });
+      
       if (yellConfirm('確定【' + studentId + '】補發次數為 ' + cardNumText + '，要「' + display + '」嗎？')) {
         google.script.run
           .withFailureHandler(onAssignFailure)
           .withSuccessHandler(onAssignSuccess)
           .assign({
             'token': localStorage.getItem('authorization'),
-            'body': {'operation': operation},
+            'body': {
+              'operation': operation,
+              'ballots': chosenBallots,
+            },
           });
       } else {
         stopPending('form#assign');
       }
+    }
+    
+    /* Special component */
+    function createBallotCheckbox(id, displayName) {
+      var idText = 'ballot-checkbox-' + id;
+      return (
+        '<label class="ballot-checkbox" for="' + idText + '">' +
+        '<input id="' + idText + '" type="checkbox" value="' + id + '"/>' +
+        '<span class="checkmark"></span>' +
+        displayName +
+        '</label>'
+      );
     }
     </script>
   </body>

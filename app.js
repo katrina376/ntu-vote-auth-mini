@@ -119,7 +119,7 @@ function lookup(req) {
           },
         };
 
-        log_('INFO', '[LOOKUP] <' + studentId + '> assign <' + ballots.join(',') + '>');
+        log_('INFO', '[LOOKUP] <' + studentId + '> assign <' + ballots.map(function(el) {return el.displayName}).join(',') + '>');
 
         var newToken = updateSecret_(token, payloads);
 
@@ -148,6 +148,7 @@ function lookup(req) {
 function assign(req) {
   var token = req.token;
   var operation = req.body.operation;
+  var chosenBallots = req.body.ballots;
 
   /* Input data (operation) validation */
   if (['ACCEPT', 'REJECT'].indexOf(operation) < 0) {
@@ -167,18 +168,40 @@ function assign(req) {
     if (isStudentVote_(student.id)) { // voted or rejected
       log_('WARNING', '[ASSIGN] <' + student.id + '> duplicated assign');
     } else {
-      /* Append record */
-      addVoteRecord_(student.id, station.id, operation);
-      log_('INFO', '[ASSIGN] <' + student.id + '> assign with <' + operation + '>');
-      status = 201;
+      if (operation == 'ACCEPT') {
+        /* Check the assigning ballot types */
+        var illegal = false;
+        for (var i in chosenBallots) {
+          var ids = student.ballots.map(function(el) {return el.id});
+          if (ids.indexOf(chosenBallots[i]) < 0) {
+            illegal = false;
+            break;
+          }
+        }
+        
+        if (illegal) {
+          /* Reject assignment */
+          log_('WARNING', '[ASSIGN] <' + student.id + '> illegal assign');
+        } else {
+          /* Append record */
+          addVoteRecord_(student.id, station.id, 'ACCEPT', chosenBallots);
+          log_('INFO', '[ASSIGN] <' + student.id + '> assign with <ACCEPT>');
+          
+          status = 201;
+        }
+      } else {
+        addVoteRecord_(student.id, station.id, 'REJECT', []);
+        log_('INFO', '[ASSIGN] <' + student.id + '> assign with <REJECT>');
+        status = 201;
+      }
     }
-
+    
     /* Update token */
     var payloads = {
       'station': station,
     }
     var newToken = updateSecret_(token, payloads);
-
+    
     return {
       'status': status,
       'token': newToken,
