@@ -1,9 +1,9 @@
-function randomString_(len) {
+function randomString_(len, chars) {
   var ret = '';
 
   for (var i = 0; i < len; i++) {
-    var idx = Math.floor(Math.random() * CHARS.length);
-    ret = ret + CHARS[idx];
+    var idx = Math.floor(Math.random() * chars.length);
+    ret = ret + chars[idx];
   }
 
   return ret;
@@ -79,7 +79,7 @@ function updateSecret_(parent, payloads) {
     ')'
   );
 
-  var token = randomString_(TOKEN_LENGTH);
+  var token = randomString_(TOKEN_LENGTH, CHARS);
   var content = JSON.stringify(payloads);
   
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
