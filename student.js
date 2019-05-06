@@ -11,7 +11,8 @@ var Student_ = function(info) {
     'code': this.dptCode[0],
   }
   
-  this.cardNum = '0'
+  this.cardNum = '0';
+  
   if (info.getChildText('ERROR').length > 0) {
     // Extract card number
     var rx = new RegExp('發卡次數:(\\d+)');
