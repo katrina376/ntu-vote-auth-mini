@@ -171,19 +171,19 @@
       background: #10961822;
     }
 
-    div#loading {
+    div#loading, div#modal {
       position: fixed;
       display: none;
       width: 100%;
       height: 100%;
       top: 0;
       left: 0;
-      background: #00000033;
+      background: #00000066;
       text-align: center;
       padding: 5%;
     }
 
-    div#loading[data-state=active] {
+    div#loading[data-state=active], div#modal[data-state=active] {
       display: block;
     }
 
@@ -202,6 +202,19 @@
               animation: spin 1s infinite;
     }
     
+    div#modal>div#modal-container {
+      display: inline-block;
+      background: #FFF;
+      width: 50%;
+      height: 80%;
+      padding: 2em;
+      border-radius: 2em;
+    }
+    
+    div#modal>div#modal-container p#voucher {
+      font-size: 2em;
+    }
+    
     @-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
        @-moz-keyframes spin { 100% {    -moz-transform: rotate(-360deg); } }
             @keyframes spin { 100% {         transform: rotate(-360deg); } }
@@ -214,6 +227,12 @@
       <div id="station"></div>
     </header>
     <div id="loading"><span id="circle"></span></div>
+    <div id="modal">
+      <div id="modal-container">
+        <div id="display">測試資料</div>
+        <button type="button" id="close">關閉</button>
+      </div>
+    </div>
     <section id="login-panel" class="panel" data-state="active">
       <section>請登入選務人員帳號。</section>
       <form id="login">
@@ -283,6 +302,18 @@
     const yellConfirm = s => confirm(s);
 
     const currentPanel = () => $$('section.panel[data-state=active] form')[0];
+    
+    /* Function of showing modal */
+    const showModal = content => {
+      $('div#modal').setAttribute('data-state', 'active');
+      $('div#modal div#display').innerHTML = content;
+      $('button#close').removeAttribute('disabled');
+    }
+    
+    const closeModal = () => {
+      $('div#modal div#display').innerText = '';
+      $('div#modal').removeAttribute('data-state');
+    }
 
     /* Update authorization token */
     function updateSecret(token) {
@@ -450,6 +481,11 @@
       studentId = ret.body.studentId;
       if (ret.status === 201) {
         yell('【' + studentId + '】操作成功！', 'info');
+        
+        voucher = ret.body.voucher;
+        if (voucher) {
+          showModal('<p>【' + studentId + '】的兌換碼為：</p><p id="voucher">' + voucher + '</p>');
+        }
       } else {
         alert('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。');
         yell('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
@@ -567,6 +603,12 @@
         stopPending('form#assign');
       }
     }
+    
+    /* Event listener for closing modal */
+    $('#close').addEventListener('click', function(ev) {
+      ev.preventDefault();
+      closeModal();
+    })
     
     /* Special component */
     function createBallotCheckbox(id, displayName) {
