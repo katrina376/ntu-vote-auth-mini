@@ -70,6 +70,10 @@ function grant_(token, func) {
 function updateSecret_(parent, payloads) {
   var app = SpreadsheetApp.openById(SYS_DB_ID);
   var sheet = app.getSheetByName('tokens');
+  
+  var lock = LockService.getScriptLock();
+  lock.waitLock(150000);
+  
   var n = sheet.getLastRow() + 1; // the row number after append
   var validator = (
     '=AND(' +
@@ -78,12 +82,14 @@ function updateSecret_(parent, payloads) {
     'D' + n + '+TIME(0,' + AUTHORIZATION_VALID_TIME + ',0)>NOW()'+
     ')'
   );
-
+  
   var token = randomString_(TOKEN_LENGTH, CHARS);
   var content = JSON.stringify(payloads);
   
   sheet.appendRow([token, parent, payloads.station.id, new Date(), validator, content]);
   SpreadsheetApp.flush();
+  
+  lock.releaseLock();
   
   CacheService.getScriptCache().remove(parent);
   CacheService.getScriptCache().put(
@@ -104,8 +110,14 @@ function addVoteRecord_(studentId, station, option, ballots) {
     record = ballots.join(',');
   }
   
+  var lock = LockService.getScriptLock();
+  lock.waitLock(150000);
+  
   sheet.appendRow([studentId, station, option, record, new Date()]);
   SpreadsheetApp.flush();
+  
+  lock.releaseLock();
+  
   return;
 }
 
