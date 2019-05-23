@@ -19,9 +19,9 @@ function authenticate_(username, password) {
   }
 
   if (!fetchCell_(table, conditions, 'username')) {
-    throw 'Invalid username.';
+    throw displayError_('USERNAME_INVALID');
   } else if (fetchCell_(table, conditions, 'password') !== password) {
-    throw 'Wrong password.';
+    throw displayError_('WRONG_PASSWORD');
   } else {
     return {
       'displayName': fetchCell_(table, conditions, 'display_name'),
