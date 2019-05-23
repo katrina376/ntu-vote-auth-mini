@@ -9,7 +9,6 @@ AUTHORIZATION_VALID_TIME = 1800; // seconds; should be an integer less than 2160
 
 // The number of available slot sessions
 ALLOW_LOGIN_NUMBER = 1; // WIP
-
 LANGUAGE = '__ISO_639-1__';
 
 /* ACA API settings */
@@ -19,3 +18,7 @@ ACA_API_PASSWORD = '__API_PASSWORD__';
 
 /* Footer information */
 FOOTER_CONTENT = []
+
+/* Voting System settings */
+VOTING_SYS_URL = '__URL_OF_VOTING_SYS__';
+VOTING_SYS_AUTHORIZATION_KEY = '__AUTHKEY_WITH_VOTING_SYS__';

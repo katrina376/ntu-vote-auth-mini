@@ -122,3 +122,33 @@ function getVoteRecordCount_(station) {
   
   return fetchCells_(table, conditions, 'student_id').length;
 }
+
+function getVoteVoucher_(ballots) {
+  var options = {
+    'method' : 'post',
+    'contentType': 'application/json',
+    'payload': JSON.stringify({'token': VOTING_SYS_AUTHORIZATION_KEY, 'body': {'ballots': ballots}}),
+    'muteHttpExceptions': true,
+  };
+  
+  var url = VOTING_SYS_URL;
+  
+  if (url) {
+    var resp = UrlFetchApp.fetch(url, options); 
+    var code = resp.getResponseCode();
+    
+    if (String(code) !== '200') {
+      throw 'Service respond code ' + code;
+    } else {
+      var content = resp.getContentText();
+      var parsed = JSON.parse(content);
+      if (parsed.body) {
+        return parsed.body.voucher;
+      } else {
+        throw displayError_('VOUCHER_FAILURE');
+      }
+    }
+  } else {
+    return undefined;
+  }
+}

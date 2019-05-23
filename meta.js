@@ -61,4 +61,8 @@ ERROR_DISPLAY = {
     'en': 'Unauthorized. Please refresh the page and login again.',
     'zh': '登入狀態失效，請重新整理畫面並再次登入。',
   },
+  'VOUCHER_FAILURE': {
+    'en': 'Failed to retrieve a voucher.',
+    'zh': '兌換碼索取失敗。',
+  },
 }

@@ -163,6 +163,7 @@ function assign(req) {
     var station = auth.station;
     
     var status = 400;
+    var voucher = '';
 
     /* Check if the student has already voted */
     if (isStudentVote_(student.id)) { // voted or rejected
@@ -183,6 +184,10 @@ function assign(req) {
           /* Reject assignment */
           log_('WARNING', '[ASSIGN] <' + student.id + '> illegal assign');
         } else {
+          /* Get voucher */
+          voucher = getVoteVoucher_(chosenBallots);
+          log_('INFO', '[ASSIGN] <' + student.id + '> get voucher');
+          
           /* Append record */
           addVoteRecord_(student.id, station.id, 'ACCEPT', chosenBallots);
           log_('INFO', '[ASSIGN] <' + student.id + '> assign with <ACCEPT>');
@@ -201,13 +206,13 @@ function assign(req) {
       'station': station,
     }
     var newToken = updateSecret_(token, payloads);
-    
     return {
       'status': status,
       'token': newToken,
       'body': {
         'acceptedCount': getVoteRecordCount_(station.id),
         'studentId': student.id,
+        'voucher': voucher,
       },
     };
   });
