@@ -494,7 +494,7 @@
 
     /* Setups for loading window */
     window.addEventListener('load', ev => {
-      // startPending();
+      startPending('form#login');
 
       /* Show the election title */
       google.script.run
@@ -519,8 +519,9 @@
           .withFailureHandler(onAuthFailure)
           .withSuccessHandler(onAuthSuccess)
           .authorize({'token': lsToken, 'body': {}});
+      } else {
+        stopPending('form#login')
       }
-      // stopPending();
     });
 
     /* Event listener to close the announce block */
