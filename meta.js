@@ -33,6 +33,14 @@ STUTYPE_MAP = {
 }
 
 ERROR_DISPLAY = {
+  'USERNAME_INVALID': {
+    'en': 'Invalid username.',
+    'zh': '帳號不存在。',
+  },
+  'WRONG_PASSWORD': {
+    'en': 'Wrong password.',
+    'zh': '密碼錯誤。',
+  },
   'INPUT_EMPTY': {
     'en': 'The username and password should not be empty.',
     'zh': '帳號或密碼應非空白。',
@@ -60,5 +68,9 @@ ERROR_DISPLAY = {
   'UNAUTHORIZED': {
     'en': 'Unauthorized. Please refresh the page and login again.',
     'zh': '登入狀態失效，請重新整理畫面並再次登入。',
+  },
+  'VOUCHER_FAILURE': {
+    'en': 'Failed to retrieve a voucher.',
+    'zh': '兌換碼索取失敗。',
   },
 }

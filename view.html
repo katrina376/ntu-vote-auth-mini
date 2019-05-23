@@ -3,7 +3,7 @@
   <head>
     <base target="_top">
     <style>
-    div, section, header, footer {
+    body, div, section, header, footer {
       -webkit-box-sizing: border-box;
          -moz-box-sizing: border-box;
               box-sizing: border-box;
@@ -15,7 +15,7 @@
 
     body {
       font-size: 20px;
-      max-width: 40em;
+      max-width: 48em;
       min-width: 20em;
       width: 100%;
       margin: 0 auto;
@@ -78,7 +78,45 @@
       display: inline-block;
       margin: 0.5em 0;
     }
-
+    
+    ol > li {
+      text-align: left;
+    }
+    
+    label.ballot-checkbox>input[type=checkbox] {
+      display: none;
+    }
+    
+    label.ballot-checkbox>span.checkmark {
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+      width: 1.1em;
+      height: 1.1em;
+      margin: 0 0.4em 0 0;
+      border: #AAA 0.1em solid;
+    }
+    
+    input[type=checkbox]:checked ~ span.checkmark {
+      background: #3366CC;
+      border: #3366CC 0.1em solid;
+    }
+    
+    input[type=checkbox]:checked ~ span.checkmark::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0.3em;
+      top: 0.1em;
+      width: 0.3em;
+      height: 0.6em;
+      border: solid #FFF;
+      border-width: 0 0.2em 0.2em 0;
+      -webkit-transform: rotate(45deg);
+          -ms-transform: rotate(45deg);
+              transform: rotate(45deg);
+    }
+    
     button[disabled] {
       background: #CCC !important;
       color: #888;
@@ -89,7 +127,7 @@
       font-size: 0.8em;
       left: 0;
       padding: 1em 2em;
-      position: fixed;
+      /*position: fixed;*/
       text-align: center;
       width: 100%;
     }
@@ -133,19 +171,19 @@
       background: #10961822;
     }
 
-    div#loading {
+    div.cover {
       position: fixed;
       display: none;
       width: 100%;
       height: 100%;
       top: 0;
       left: 0;
-      background: #00000033;
+      background: #00000066;
       text-align: center;
       padding: 5%;
     }
 
-    div#loading[data-state=active] {
+    div.cover[data-state=active] {
       display: block;
     }
 
@@ -163,7 +201,20 @@
          -moz-animation: spin 1s infinite;
               animation: spin 1s infinite;
     }
-
+    
+    div#modal>div#modal-container {
+      display: inline-block;
+      background: #FFF;
+      width: 50%;
+      height: 80%;
+      padding: 2em;
+      border-radius: 2em;
+    }
+    
+    div#modal>div#modal-container p#voucher {
+      font-size: 2em;
+    }
+    
     @-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
        @-moz-keyframes spin { 100% {    -moz-transform: rotate(-360deg); } }
             @keyframes spin { 100% {         transform: rotate(-360deg); } }
@@ -175,7 +226,13 @@
       <div id="election-title">----</div>
       <div id="station"></div>
     </header>
-    <div id="loading"><span id="circle"></span></div>
+    <div class="cover" id="loading"><span id="circle"></span></div>
+    <div class="cover" id="modal">
+      <div id="modal-container">
+        <div id="display">測試資料</div>
+        <button type="button" id="close">關閉</button>
+      </div>
+    </div>
     <section id="login-panel" class="panel" data-state="active">
       <section>請登入選務人員帳號。</section>
       <form id="login">
@@ -245,12 +302,23 @@
     const yellConfirm = s => confirm(s);
 
     const currentPanel = () => $$('section.panel[data-state=active] form')[0];
+    
+    /* Function of showing modal */
+    const showModal = content => {
+      $('div#modal').setAttribute('data-state', 'active');
+      $('div#modal div#display').innerHTML = content;
+      $('button#close').removeAttribute('disabled');
+    }
+    
+    const closeModal = () => {
+      $('div#modal div#display').innerText = '';
+      $('div#modal').removeAttribute('data-state');
+    }
 
     /* Update authorization token */
     function updateSecret(token) {
       if (token) {
         localStorage.setItem('authorization', token);
-        $$('input.token').forEach(el => {el.value = token});
       } else {
         localStorage.removeItem('authorization');
         $$('input').forEach(el => {el.value = ''});
@@ -382,7 +450,7 @@
         display = (
           display +
           '<ol>' +
-          ballots.map(el => '<li>' + el + '</li>').join('') +
+          ballots.map(el => '<li>' + createBallotCheckbox(el.id, el.displayName) + '</li>').join('') +
           '</ol>'
         );
       } else {
@@ -413,6 +481,11 @@
       studentId = ret.body.studentId;
       if (ret.status === 201) {
         yell('【' + studentId + '】操作成功！', 'info');
+        
+        voucher = ret.body.voucher;
+        if (voucher) {
+          showModal('<p>【' + studentId + '】的兌換碼為：</p><p id="voucher">' + voucher + '</p>');
+        }
       } else {
         alert('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。');
         yell('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
@@ -421,7 +494,7 @@
 
     /* Setups for loading window */
     window.addEventListener('load', ev => {
-      // startPending();
+      startPending('form#login');
 
       /* Show the election title */
       google.script.run
@@ -446,8 +519,9 @@
           .withFailureHandler(onAuthFailure)
           .withSuccessHandler(onAuthSuccess)
           .authorize({'token': lsToken, 'body': {}});
+      } else {
+        stopPending('form#login')
       }
-      // stopPending();
     });
 
     /* Event listener to close the announce block */
@@ -505,18 +579,48 @@
     function submitAssign(display, operation) {
       var studentId = $('#show-student-id').innerText;
       var cardNumText = $('#show-card-num').innerText;
-
+      
+      var checkboxes = $$('.ballot-checkbox>input');
+      var chosenBallots = [];
+      
+      checkboxes.forEach(el => {
+        if (el.checked) {
+          chosenBallots.push(el.value);
+        }
+      });
+      
       if (yellConfirm('確定【' + studentId + '】補發次數為 ' + cardNumText + '，要「' + display + '」嗎？')) {
         google.script.run
           .withFailureHandler(onAssignFailure)
           .withSuccessHandler(onAssignSuccess)
           .assign({
             'token': localStorage.getItem('authorization'),
-            'body': {'operation': operation},
+            'body': {
+              'operation': operation,
+              'ballots': chosenBallots,
+            },
           });
       } else {
         stopPending('form#assign');
       }
+    }
+    
+    /* Event listener for closing modal */
+    $('#close').addEventListener('click', function(ev) {
+      ev.preventDefault();
+      closeModal();
+    })
+    
+    /* Special component */
+    function createBallotCheckbox(id, displayName) {
+      var idText = 'ballot-checkbox-' + id;
+      return (
+        '<label class="ballot-checkbox" for="' + idText + '">' +
+        '<input id="' + idText + '" type="checkbox" value="' + id + '" checked/>' +
+        '<span class="checkmark"></span>' +
+        displayName +
+        '</label>'
+      );
     }
     </script>
   </body>

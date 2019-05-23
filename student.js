@@ -11,7 +11,8 @@ var Student_ = function(info) {
     'code': this.dptCode[0],
   }
   
-  this.cardNum = '0'
+  this.cardNum = '0';
+  
   if (info.getChildText('ERROR').length > 0) {
     // Extract card number
     var rx = new RegExp('發卡次數:(\\d+)');
@@ -69,6 +70,54 @@ function fetchStudent_(studentId) {
     }
   } catch (err) {
     log_('ERROR', '[ACA] <' + err + '> when lookup <' + studentId + '>');
+    throw err;
+  }
+}
+
+function fetchStudentByCard_(cardNo) {
+  var root = XmlService.createElement('STUREQ');
+
+  var uid = XmlService.createElement('UID').setText(ACA_API_USER);
+  var password = XmlService.createElement('PASSWORD').setText(ACA_API_PASSWORD);
+  var cardno = XmlService.createElement('CARDNO').setText(cardNo);
+  var ver = XmlService.createElement('Vers').setText('1.00');
+
+  root.addContent(ver).addContent(uid).addContent(password).addContent(cardno);
+
+  var doc = XmlService.createDocument(root);
+  var queryString = XmlService.getRawFormat().setEncoding('big5').format(doc);
+
+  var options = {
+    'method' : 'post',
+    'contentType': 'application/xml',
+    'headers': {'X-Requested-With': 'NTUVote'},
+    'payload': queryString,
+    'muteHttpExceptions': true,
+  };
+
+  try {
+    var url = ACA_API_URL;
+    var resp = UrlFetchApp.fetch(url, options);
+    
+    var code = resp.getResponseCode();
+    
+    if (String(code) !== '200') {
+      throw 'Service respond code ' + code;
+    } else {
+      var content = resp.getContentText('Big5');
+      var info = XmlService.parse(content).getRootElement();
+      var ok = info.getChildText('WEBOK') === 'OK';
+      var incampus = info.getChildText('INCAMPUS');
+  
+      if (ok) {
+        return new Student_(info);
+      } else if (incampus.length > 0) {
+        return new Student_(info);
+      } else {
+        throw info.getChildText('ERROR');
+      }
+    }
+  } catch (err) {
     throw err;
   }
 }
