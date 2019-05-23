@@ -171,7 +171,7 @@
       background: #10961822;
     }
 
-    div#loading, div#modal {
+    div.cover {
       position: fixed;
       display: none;
       width: 100%;
@@ -183,7 +183,7 @@
       padding: 5%;
     }
 
-    div#loading[data-state=active], div#modal[data-state=active] {
+    div.cover[data-state=active] {
       display: block;
     }
 
@@ -226,8 +226,8 @@
       <div id="election-title">----</div>
       <div id="station"></div>
     </header>
-    <div id="loading"><span id="circle"></span></div>
-    <div id="modal">
+    <div class="cover" id="loading"><span id="circle"></span></div>
+    <div class="cover" id="modal">
       <div id="modal-container">
         <div id="display">測試資料</div>
         <button type="button" id="close">關閉</button>
