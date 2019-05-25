@@ -12,7 +12,6 @@
     * {
       font-size: inherit;
     }
-
     body {
       font-size: 20px;
       max-width: 48em;
@@ -22,31 +21,25 @@
       padding: 1em 2em;
       position: relative;
     }
-
     header {
       text-align: center;
       font-size: 1.6em;
       margin-bottom: 1em;
     }
-
     header>div {
       font-size: inherit;
       margin: 0.5em;
     }
-
     section.panel {
       display: none;
       text-align: center;
     }
-
     section.panel[data-state=active] {
       display: block;
     }
-
     section.panel>section {
       margin: 1em 0;
     }
-
     button {
       background: #3366CC;
       color: #FFF;
@@ -56,24 +49,19 @@
       padding: 0.5em 0.8em;
       margin: 0.5em 0;
     }
-
     button#send-reject {
       background: #DC3912;
     }
-
     button#send-accept {
       background: #109618;
     }
-
     label {
       display: block;
       margin: 1em auto;
     }
-
     p {
       margin: 0.5em 0;
     }
-
     ol {
       display: inline-block;
       margin: 0.5em 0;
@@ -131,11 +119,9 @@
       text-align: center;
       width: 100%;
     }
-
     a, a:visited {
       color: #3366CC;
     }
-
     a:active, a:hover {
       color: #AAA;
     }
@@ -143,34 +129,28 @@
     a#logout {
       font-size: 0.7em;
     }
-
     #announce {
       border: 1px solid transparent;
       font-size: 80%;
       margin-top: 1em;
       padding: 1em 2em;
     }
-
     #announce.info {
       border-color: #3366CC;
       background: #3366CC22;
     }
-
     #announce.warning {
       border-color: #FF9900;
       background: #FF990022;
     }
-
     #announce.alert {
       border-color: #DC3912;
       background: #DC391222;
     }
-
     #announce.success {
       border-color: #109618;
       background: #10961822;
     }
-
     div.cover {
       position: fixed;
       display: none;
@@ -182,11 +162,9 @@
       text-align: center;
       padding: 5%;
     }
-
     div.cover[data-state=active] {
       display: block;
     }
-
     span#circle {
       display: inline-block;
       width: 2.8em;
@@ -267,7 +245,6 @@
     /* Handy selectors */
     const $ = s => document.querySelector(s) ;
     const $$ = s => document.querySelectorAll(s) ;
-
     /* Function to show the current section */
     const show = (panel, payloads) => {
       $$('section.panel').forEach(el => el.removeAttribute('data-state'));
@@ -280,7 +257,6 @@
         $(panel + ' ' + f).innerText = payloads[f];
       }
     }
-
     /* Pending animation */
     const startPending = panel => {
       $$(panel + ' button').forEach(el => el.setAttribute('disabled', ''));
@@ -293,14 +269,12 @@
       $('div#loading').removeAttribute('data-state');
     }
     const resetPanel = panel => {$$(panel + ' input').forEach(el => el.value = '')};
-
     /* Function to alert */
     const yell = (s, type) => {
       $('#announce').innerText = s;
       $('#announce').className = type || 'alert';
     }
     const yellConfirm = s => confirm(s);
-
     const currentPanel = () => $$('section.panel[data-state=active] form')[0];
     
     /* Function of showing modal */
@@ -314,7 +288,6 @@
       $('div#modal div#display').innerText = '';
       $('div#modal').removeAttribute('data-state');
     }
-
     /* Update authorization token */
     function updateSecret(token) {
       if (token) {
@@ -324,14 +297,12 @@
         $$('input').forEach(el => {el.value = ''});
       }
     }
-
     /* Handler of authorization */
     function onAuthFailure(err) {
       stopPending('form#login');
       updateSecret();
       yell('登入已失效，請重新登入！', 'warning');
     }
-
     function onAuthSuccess(ret) {
       if (ret.status !== 200) {
         return onAuthFailure(Error(ret.error));
@@ -343,14 +314,12 @@
         prepareAssign(ret.token, ret.body.student.id, ret.body.student.cardNum, ret.body.student.ballots);
       }
     }
-
     /* Handler of login */
     function onLoginFailure(err) {
       stopPending('form#login');
       resetPanel('form#login');
       yell('登入失敗，原因：' + err.message);
     }
-
     function onLoginSuccess(ret) {
       if (ret.status !== 200) {
         return onLoginFailure(Error(ret.error));
@@ -363,18 +332,14 @@
       /* Activate */
       stopPending('form#login');
       resetPanel('form#login');
-
       /* Renew */
       updateSecret(token);
       $('div#station').innerHTML = '【' + displayName + '投票所】<a href="#" id="logout">登出</a>';
-
       /* Event listener for logout */
       $('#logout').addEventListener('click', ev => {
         ev.preventDefault();
-
         var current = currentPanel();
         startPending(current.id);
-
         var token = localStorage.getItem('authorization');
         google.script.run
           .withFailureHandler(onLogoutFailure)
@@ -382,17 +347,14 @@
           .withUserObject(current)
           .logout({'token': token, 'body': {}});
       });
-
       /* Show */
       show('section#lookup-panel', {'#show-accepted': acceptedCount});
     }
-
     /* Handler of logout */
     function onLogoutFailure(err, obj) {
       stopPending(obj.id);
       yell('登出失敗，原因：' + err.message);
     }
-
     function onLogoutSuccess(ret, obj) {
       if (ret.status !== 200) {
         return onLogoutFailure(Error(ret.error), obj);
@@ -401,28 +363,22 @@
       /* Activate */
       stopPending(obj.id);
       resetPanel(obj.id);
-
       /* Renew */
       updateSecret();
-
       /* Show */
       $('#station').innerHTML = '';
       show('section#login-panel');
       yell('登出成功！', 'info');
     }
-
     /* Handler of lookup */
     function onLookupFailure(err) {
       /* Activate */
       stopPending('form#lookup');
-
       /* Clear */
       var studentId = $('input#student-id').value;
       $('input#student-id').value = '';
-
       yell('【' + studentId + '】查詢失敗，原因：' + err.message);
     }
-
     function onLookupSuccess(ret) {
       if (ret.status !== 200) {
         return onLookupFailure(Error(ret.error));
@@ -440,7 +396,6 @@
       updateSecret(token);
       
       var cardNumText = (cardNum === '0') ? cardNum + ' 次（初發）' : cardNum + ' 次'
-
       /* Render */
       var display = (
         '<p>【<span id="show-student-id">' + studentId + '</span>】之學生證補發次數為 <span id="show-card-num"> ' + cardNumText + '</span>，請確認。</p>' +
@@ -456,25 +411,20 @@
       } else {
         display = display + '<p>無。</p>';
       }
-
       /* Show */
       $('section#lookup-result').innerHTML = display;
       show('section#assign-panel');
     }
-
     /* Handler of assignment */
     function onAssignFailure(err) {
       stopPending('form#assign');
       yell('操作失敗，原因：' + err.message);
     }
-
     function onAssignSuccess(ret) {
       /* Activate */
       stopPending('form#assign');
-
       /* Renew */
       updateSecret(ret.token);
-
       /* Show */
       show('section#lookup-panel', {'#show-accepted': ret.body.acceptedCount});
       
@@ -491,11 +441,9 @@
         yell('【' + studentId + '】操作失敗，原因：已於其他投票所完成驗證。', 'alert');
       }
     }
-
     /* Setups for loading window */
     window.addEventListener('load', ev => {
       startPending('form#login');
-
       /* Show the election title */
       google.script.run
         .withSuccessHandler(title => {$('#election-title').innerText = title})
@@ -505,13 +453,11 @@
       google.script.run
         .withSuccessHandler(content => {$('footer').innerHTML = content})
         .showFooter();
-
       /* Disable autocomplete and the default event of form submission */
       $$('form').forEach(el => {
         el.setAttribute('autocomplete', 'off');
         el.addEventListener('submit', ev => ev.preventDefault());
       });
-
       /* Check local storage for authorization */
       var lsToken = localStorage.getItem('authorization');
       if (lsToken) {
@@ -523,17 +469,14 @@
         stopPending('form#login')
       }
     });
-
     /* Event listener to close the announce block */
     $('body').addEventListener('click', ev => {
       $('#announce').className = '';
       $('#announce').innerText = '';
     });
-
     /* Event listener for login */
     $('form#login').addEventListener('submit', ev => {
       startPending('form#login');
-
       google.script.run
         .withFailureHandler(onLoginFailure)
         .withSuccessHandler(onLoginSuccess)
@@ -545,12 +488,10 @@
           },
         });
     });
-
     /* Event listener for lookup */
     $('form#lookup').addEventListener('submit', ev => {
       var studentId = ev.target.elements['studentId'].value.toUpperCase().trim()
       var syntaxValid = new RegExp('^[A-Z]\\d{2}[A-Z0-9]\\d{5}$').test(studentId);
-
       if (syntaxValid) {
         startPending('form#lookup');
         google.script.run
@@ -564,7 +505,6 @@
         yell('學號不符合格式。', 'warning');
       }
     });
-
     /* Event listener for assignment */
     $$('button.summit-assign').forEach(el => {
       el.addEventListener('click', ev => {
@@ -575,7 +515,6 @@
         submitAssign(display, operation);
       });
     });
-
     function submitAssign(display, operation) {
       var studentId = $('#show-student-id').innerText;
       var cardNumText = $('#show-card-num').innerText;
@@ -605,10 +544,18 @@
       }
     }
     
+    /* Voucher Close Confirmation (Wayne Add at 5/25) */
+    function voucherCloseConfirm() {
+      return yellConfirm('確定要「關閉驗證碼」嗎?');
+    }
+
     /* Event listener for closing modal */
     $('#close').addEventListener('click', function(ev) {
       ev.preventDefault();
-      closeModal();
+      /* Voucher Close Confirmation (Wayne Add at 5/25) */
+      if(voucherCloseConfirm()) {
+        closeModal();
+      }
     })
     
     /* Special component */
